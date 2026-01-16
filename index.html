@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>浸沒式冷卻技術解析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700&display=swap');
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            scroll-behavior: smooth;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        }
+        .card-glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-glass:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-8px);
+            border-color: rgba(56, 189, 248, 0.5);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .tech-blue { color: #38bdf8; }
+        
+        /* 科技感插畫容器 */
+        .illustration-container {
+            width: 100%;
+            height: 200px;
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            background: #020617;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 數據流動動畫 */
+        .data-line {
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            animation: dash 3s linear infinite;
+        }
+        @keyframes dash {
+            to { stroke-dashoffset: 0; }
+        }
+
+        /* 散熱槽液體動畫 */
+        .tank-liquid {
+            background: linear-gradient(to bottom, #0ea5e966, #0284c799);
+            position: relative;
+            overflow: hidden;
+        }
+        .tank-liquid::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+            animation: wave 10s linear infinite;
+        }
+        @keyframes wave {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 氣泡上升動畫 */
+        .bubble {
+            position: absolute;
+            bottom: -10px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: rise-linear var(--duration) ease-in infinite;
+        }
+        @keyframes rise-linear {
+            0% { transform: translateY(0) scale(1); opacity: 0; }
+            20% { opacity: 0.6; }
+            100% { transform: translateY(-120px) scale(1.4); opacity: 0; }
+        }
+
+        .steam-bubble {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.5);
+            filter: blur(1px);
+            border-radius: 50%;
+            animation: steam-rise var(--duration) ease-out infinite;
+        }
+        @keyframes steam-rise {
+            0% { transform: translate(0, 0) scale(0.6); opacity: 0; }
+            50% { transform: translate(3px, -45px) scale(1.2); opacity: 0.8; }
+            100% { transform: translate(-1px, -90px) scale(1.8); opacity: 0; }
+        }
+
+        .droplet {
+            position: absolute;
+            background: #7dd3fc;
+            width: 3px;
+            height: 8px;
+            border-radius: 2px;
+            animation: drip var(--duration) cubic-bezier(0.4, 0, 1, 1) infinite;
+        }
+        @keyframes drip {
+            0% { transform: translateY(0); opacity: 0; }
+            20% { opacity: 1; }
+            100% { transform: translateY(70px); opacity: 0; }
+        }
+
+        .flow-hot { stroke-dasharray: 6; animation: flow-anim 1s linear infinite; stroke: #ef4444; }
+        .flow-cold { stroke-dasharray: 6; animation: flow-anim 1.5s linear infinite reverse; stroke: #38bdf8; }
+        @keyframes flow-anim { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
+
+        .pump-blade { animation: pump-spin-fixed 1.5s linear infinite; transform-origin: 150px 90px; }
+        @keyframes pump-spin-fixed { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .progress-bar { height: 4px; background: #38bdf8; position: fixed; top: 0; left: 0; z-index: 100; }
+
+        /* 黃色按鈕樣式 */
+        .video-btn-yellow {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #fbbf24; /* Amber-400 */
+            color: #0f172a;
+            font-weight: 700;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(251, 191, 36, 0.3);
+            margin-top: 1rem;
+        }
+        .video-btn-yellow:hover {
+            background-color: #f59e0b; /* Amber-500 */
+            transform: scale(1.05);
+            box-shadow: 0 10px 15px -3px rgba(251, 191, 36, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-200 leading-relaxed">
+
+    <div id="scrollProgress" class="progress-bar" style="width: 0%"></div>
+
+    <!-- Header -->
+    <header class="relative h-screen flex items-center justify-center overflow-hidden gradient-bg">
+        <div class="absolute inset-0 opacity-20">
+            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" stroke-width="0.5"/>
+                    </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#grid)" />
+            </svg>
+        </div>
+        <div class="relative z-10 text-center px-6">
+            <h1 class="text-5xl md:text-7xl font-bold mb-6 tracking-tight">
+                <span class="tech-blue">浸沒式冷卻</span>說明 V1.4
+            </h1>
+            <p class="text-xl md:text-2xl text-slate-400 max-w-3xl mx-auto mb-10">
+                高效、節能、未來數據中心的散熱解方
+            </p>
+        </div>
+        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce opacity-50">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+            </svg>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 py-20">
+        
+        <!-- Section: Definition -->
+        <section class="mb-32">
+            <div class="grid md:grid-cols-2 gap-16 items-center">
+                <div>
+                    <h2 class="text-3xl font-bold mb-6 border-l-4 border-sky-500 pl-4 text-white">什麼是浸沒式冷卻？</h2>
+                    <p class="mb-4 text-slate-300">
+                        浸沒式冷卻將伺服器硬體完全浸沒於特製的不導電<b>介電液體</b>中。液體直接吸收組件熱量，熱交換效率遠超傳統氣冷。
+                    </p>
+                    <div class="space-y-4 mt-8">
+                        <div class="flex items-center p-4 card-glass rounded-xl">
+                            <div class="bg-sky-500/20 p-3 rounded-lg mr-4">
+                                <svg class="w-6 h-6 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            </div>
+                            <div><h4 class="font-bold text-white">高能源效率</h4><p class="text-sm text-slate-400">PUE 趨近於 1.02。</p></div>
+                        </div>
+                        <div class="flex items-center p-4 card-glass rounded-xl">
+                            <div class="bg-indigo-500/20 p-3 rounded-lg mr-4">
+                                <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                            </div>
+                            <div><h4 class="font-bold text-white">超高密度佈署</h4><p class="text-sm text-slate-400">支持 100kW+ 機櫃密度。</p></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="relative">
+                    <div class="card-glass p-10 rounded-3xl flex flex-col items-center justify-center shadow-2xl overflow-hidden">
+                        <div class="relative w-64 h-80 border-4 border-slate-700/50 rounded-b-2xl rounded-t-lg tank-liquid flex items-end p-3">
+                            <div class="flex gap-3 w-full h-3/4 justify-center">
+                                <div class="w-8 h-full bg-slate-800/90 border border-slate-600 rounded"></div>
+                                <div class="w-8 h-full bg-slate-800/90 border border-slate-600 rounded"></div>
+                                <div class="w-8 h-full bg-slate-800/90 border border-slate-600 rounded"></div>
+                            </div>
+                            <div class="bubble" style="left: 20%; --duration: 3s; width: 6px; height: 6px;"></div>
+                            <div class="bubble" style="left: 80%; --duration: 3.5s; width: 8px; height: 8px;"></div>
+                        </div>
+                        <div class="mt-6 text-xs font-bold text-sky-400 uppercase tracking-widest">System Operational</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Categories -->
+        <section id="categories" class="mb-32">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold mb-4 text-white">技術類別解析</h2>
+                <p class="text-slate-400 text-lg">單相與雙相循環的物理機制對比</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-12">
+                <!-- Single Phase Card -->
+                <div class="card-glass p-8 rounded-[2.5rem] border-t-4 border-sky-500 flex flex-col">
+                    <h3 class="text-2xl font-bold text-white mb-2">單相浸沒式</h3>
+                    <p class="text-sky-400 text-xs font-mono uppercase tracking-widest mb-8">Single Phase Immersion</p>
+                    <div class="bg-slate-950/50 rounded-2xl p-6 mb-8 relative overflow-hidden border border-slate-800 h-48 flex items-center">
+                        <svg class="w-full h-full" viewBox="0 0 300 150">
+                            <rect x="20" y="40" width="80" height="90" fill="rgba(14,165,233,0.15)" stroke="#0ea5e9" stroke-width="2" rx="4"/>
+                            <rect x="40" y="70" width="40" height="50" fill="#1e293b" stroke="#334155"/>
+                            <path d="M 100,60 L 150,60 L 150,30 L 220,30" fill="none" stroke="#334155" stroke-width="3"/>
+                            <path d="M 100,60 L 150,60 L 150,30 L 220,30" fill="none" class="flow-hot" stroke-width="2"/>
+                            <path d="M 220,110 L 150,110 L 150,90 L 100,90" fill="none" stroke="#334155" stroke-width="3"/>
+                            <path d="M 220,110 L 150,110 L 150,90 L 100,90" fill="none" class="flow-cold" stroke-width="2"/>
+                            <g>
+                                <circle cx="150" cy="90" r="12" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>
+                                <g class="pump-blade">
+                                    <line x1="142" y1="90" x2="158" y2="90" stroke="#38bdf8" stroke-width="2"/>
+                                    <line x1="150" y1="82" x2="150" y2="98" stroke="#38bdf8" stroke-width="2"/>
+                                </g>
+                            </g>
+                            <rect x="220" y="20" width="50" height="110" fill="rgba(30,41,59,0.8)" stroke="#475569" rx="4"/>
+                            <text x="245" y="75" text-anchor="middle" fill="#64748b" font-size="8" font-family="monospace">CDU</text>
+                        </svg>
+                    </div>
+                    <p class="text-slate-400 mb-2 flex-grow">
+                        冷卻液始終保持<b>液態</b>。透過泵浦驅動，流過熱源吸收能量後進入外部熱交換器（CDU）降溫，再回流。
+                    </p>
+                    <div>
+                        <a href="https://www.youtube.com/watch?v=ZnShbT5gU-M&pp=ygUV5rW45rKS5byP5Ya35Y275oqA6KGT" target="_blank" class="video-btn-yellow">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"/></svg>
+                            觀看單相技術影片
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Two Phase Card -->
+                <div class="card-glass p-8 rounded-[2.5rem] border-t-4 border-indigo-500 flex flex-col">
+                    <h3 class="text-2xl font-bold text-white mb-2">雙相浸沒式</h3>
+                    <p class="text-indigo-400 text-xs font-mono uppercase tracking-widest mb-8">Two Phase Immersion</p>
+                    <div class="bg-slate-950/50 rounded-2xl p-6 mb-8 relative overflow-hidden border border-slate-800 h-48">
+                        <div class="relative w-full h-full flex flex-col items-center">
+                            <div class="w-40 h-10 border-2 border-slate-700 rounded-full bg-slate-900/80 flex items-center justify-center relative">
+                                <div class="droplet" style="--duration: 1.5s; left: 30%"></div>
+                                <div class="droplet" style="--duration: 2s; left: 50%"></div>
+                                <div class="droplet" style="--duration: 1.8s; left: 70%"></div>
+                                <span class="text-[8px] text-slate-500">CONDENSER</span>
+                            </div>
+                            <div class="w-36 h-28 border-x-2 border-b-2 border-indigo-900/40 rounded-b-xl relative mt-1 bg-indigo-500/5">
+                                <div class="absolute bottom-0 w-full h-1/3 bg-indigo-500/20"></div>
+                                <div class="steam-bubble" style="bottom: 25%; left: 30%; width: 6px; height: 6px; --duration: 1.5s"></div>
+                                <div class="steam-bubble" style="bottom: 30%; left: 55%; width: 10px; height: 10px; --duration: 1.2s"></div>
+                                <div class="steam-bubble" style="bottom: 20%; left: 75%; width: 8px; height: 8px; --duration: 1.8s"></div>
+                                <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-16 h-8 bg-slate-800 rounded border border-red-500/30 flex items-center justify-center">
+                                    <span class="text-[8px] text-red-500 font-bold">Heat Source</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-slate-400 mb-2 flex-grow">
+                        利用液體<b>相變</b>。發熱源使液體沸騰產生蒸氣，蒸氣升騰至頂部遇冷凝結成液滴回流，循環效率極高。
+                    </p>
+                    <div>
+                        <a href="https://www.youtube.com/watch?v=U6LQeFmY-IU&pp=ygUb6ZuZ55u45rW45rKS5byP5Ya35Y275oqA6KGT" target="_blank" class="video-btn-yellow">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"/></svg>
+                            觀看雙相技術影片
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Case Studies -->
+        <section class="mb-32">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold mb-4 text-white">實際應用案例</h2>
+                <p class="text-slate-400 text-lg"></p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Case 1: AI Cluster -->
+                <div class="card-glass p-8 rounded-2xl border-b-4 border-emerald-500 flex flex-col h-full">
+                    <div class="illustration-container">
+                        <svg width="140" height="140" viewBox="0 0 100 100">
+                            <defs>
+                                <linearGradient id="aiGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            <rect x="20" y="20" width="60" height="60" rx="8" fill="none" stroke="url(#aiGrad)" stroke-width="2" />
+                            <circle cx="50" cy="50" r="15" fill="none" stroke="#10b981" stroke-width="1" />
+                            <circle cx="35" cy="35" r="2" fill="#10b981">
+                                <animate attributeName="opacity" values="0;1;0" dur="2s" infinite />
+                            </circle>
+                            <circle cx="65" cy="65" r="2" fill="#10b981">
+                                <animate attributeName="opacity" values="0;1;0" dur="2.5s" infinite />
+                            </circle>
+                            <path d="M50 30 V20 M70 50 H80 M50 70 V80 M30 50 H20" stroke="#10b981" stroke-width="2" stroke-linecap="round" />
+                            <text x="50" y="95" text-anchor="middle" fill="#10b981" font-size="8" font-weight="bold">AI COMPUTE</text>
+                        </svg>
+                    </div>
+                    <div class="text-emerald-400 font-bold mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M21 16.5c0 .38-.21.71-.53.88l-7.97 4.43c-.16.09-.33.14-.5.14s-.34-.05-.5-.14l-7.97-4.43c-.32-.17-.53-.5-.53-.88v-9c0-.38.21-.71.53-.88l7.97-4.43c.16-.09.33-.14.5-.14s.34.05.5.14l7.97 4.43c.32.17.53.5.53.88v9z"/></svg>
+                        AI 算力中心
+                    </div>
+                    <h4 class="text-xl font-bold text-white mb-4">NVIDIA H100 叢集</h4>
+                    <p class="text-slate-400 text-sm mb-6 flex-grow">
+                        針對 TDP 高達 700W 的 H100 GPU，浸沒式冷卻能有效消除熱點，確保 AI 訓練在大規模擴展時的穩定性。
+                    </p>
+                    <ul class="text-xs text-emerald-500 space-y-2 font-mono">
+                        <li>• 性能提升：10-15%</li>
+                        <li>• 佈署密度：100kW/機櫃</li>
+                    </ul>
+                </div>
+
+                <!-- Case 2: Cloud Data Center -->
+                <div class="card-glass p-8 rounded-2xl border-b-4 border-blue-500 flex flex-col h-full">
+                    <div class="illustration-container">
+                        <svg width="140" height="140" viewBox="0 0 100 100">
+                            <path d="M30 65 Q20 65 20 55 Q20 45 30 45 Q35 30 50 30 Q65 30 70 45 Q80 45 80 55 Q80 65 70 65 H30" fill="none" stroke="#38bdf8" stroke-width="2" />
+                            <rect x="48" y="50" width="4" height="15" fill="#38bdf8" opacity="0.6">
+                                <animate attributeName="y" values="45;65" dur="1.5s" repeatCount="indefinite" />
+                                <animate attributeName="opacity" values="0;1;0" dur="1.5s" repeatCount="indefinite" />
+                            </rect>
+                            <rect x="35" y="55" width="2" height="10" fill="#38bdf8" opacity="0.4">
+                                <animate attributeName="y" values="50;70" dur="2s" repeatCount="indefinite" />
+                                <animate attributeName="opacity" values="0;0.8;0" dur="2s" repeatCount="indefinite" />
+                            </rect>
+                            <text x="50" y="90" text-anchor="middle" fill="#38bdf8" font-size="8" font-weight="bold">CLOUD NETWORK</text>
+                        </svg>
+                    </div>
+                    <div class="text-blue-400 font-bold mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M2 3h9v9H2V3m9 19H2v-9h9v9M13 3h9v9h-9V3m9 19h-9v-9h9v9z"/></svg>
+                        公有雲業者
+                    </div>
+                    <h4 class="text-xl font-bold text-white mb-4">微軟雲端機房</h4>
+                    <p class="text-slate-400 text-sm mb-6 flex-grow">
+                        微軟在部分區域採用雙相浸沒技術，徹底取消風扇，顯著降低機械組件故障率與伺服器空調耗電。
+                    </p>
+                    <ul class="text-xs text-blue-500 space-y-2 font-mono">
+                        <li>• PUE 表現：1.02</li>
+                        <li>• 硬體可靠度大幅提升</li>
+                    </ul>
+                </div>
+
+                <!-- Case 3: Mining Farm -->
+                <div class="card-glass p-8 rounded-2xl border-b-4 border-orange-500 flex flex-col h-full">
+                    <div class="illustration-container">
+                        <svg width="140" height="140" viewBox="0 0 100 100">
+                            <polygon points="50,20 80,40 80,70 50,90 20,70 20,40" fill="none" stroke="#f97316" stroke-width="2" />
+                            <path d="M20 40 L50 60 L80 40 M50 60 V90" stroke="#f97316" stroke-width="1" opacity="0.5" />
+                            <rect x="42" y="42" width="16" height="16" fill="none" stroke="#fb923c" stroke-width="2">
+                                <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="4s" repeatCount="indefinite" />
+                            </rect>
+                            <text x="50" y="95" text-anchor="middle" fill="#f97316" font-size="8" font-weight="bold">BLOCKCHAIN</text>
+                        </svg>
+                    </div>
+                    <div class="text-orange-400 font-bold mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"/></svg>
+                        區塊鏈礦場
+                    </div>
+                    <h4 class="text-xl font-bold text-white mb-4">高密度礦場</h4>
+                    <p class="text-slate-400 text-sm mb-6 flex-grow">
+                        大型礦場將 ASIC 礦機浸入冷卻油中進行極限超頻。浸沒式環境隔絕了粉塵與濕氣，延長了機器運作壽命。
+                    </p>
+                    <ul class="text-xs text-orange-500 space-y-2 font-mono">
+                        <li>• 硬體壽命延長：25%+</li>
+                        <li>• 廢熱資源回收再利用</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Stats -->
+        <section class="mb-32">
+            <h2 class="text-3xl font-bold mb-12 text-center text-white">關鍵指標對比</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="card-glass p-8 rounded-2xl text-center">
+                    <div class="text-slate-400 text-sm mb-2 uppercase font-medium">能源效率 (PUE)</div>
+                    <div class="text-4xl font-bold text-sky-400">1.02</div>
+                </div>
+                <div class="card-glass p-8 rounded-2xl text-center">
+                    <div class="text-slate-400 text-sm mb-2 uppercase font-medium">電力密度</div>
+                    <div class="text-4xl font-bold text-sky-400">100kW+</div>
+                </div>
+                <div class="card-glass p-8 rounded-2xl text-center">
+                    <div class="text-slate-400 text-sm mb-2 uppercase font-medium">營運噪音</div>
+                    <div class="text-4xl font-bold text-sky-400">0 dB</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-slate-950/50 py-12 border-t border-slate-800/50">
+        <div class="max-w-6xl mx-auto px-6 text-center text-slate-500 text-sm">
+            <p>Created by Randy Chen © 2026</p>
+        </div>
+    </footer>
+
+    <script>
+        // 進度條監聽
+        window.addEventListener('scroll', () => {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (winScroll / height) * 100;
+            const progressBar = document.getElementById("scrollProgress");
+            if (progressBar) progressBar.style.width = scrolled + "%";
+        });
+
+        // 取消右鍵功能
+        document.addEventListener('contextmenu', (event) => {
+            event.preventDefault();
+        });
+    </script>
+</body>
+</html>
